@@ -12,9 +12,10 @@ static const uint8_t flash_table_decode[] = {0x0a, 0x03, 0x01, 0x0c, 0x0d, 0x07,
 
 void Elero::loop() {
   if(this->received_) {
-    ESP_LOGVV(TAG, "loop says \"received\"");
+    ESP_LOGD(TAG, "loop: received flag set");
     this->received_ = false;
     uint8_t len = this->read_status(CC1101_RXBYTES);
+    ESP_LOGD(TAG, "loop: RXBYTES=0x%02x", len);
     if(len & 0x7F) { // bytes available
       if((len & 0x7F) > CC1101_FIFO_LENGTH) {
         ESP_LOGV(TAG, "Received more bytes than FIFO length - wtf?");
@@ -22,10 +23,17 @@ void Elero::loop() {
       } else {
         this->read_buf(CC1101_RXFIFO, this->msg_rx_, (len & 0x7f));
       }
+      ESP_LOGD(TAG, "loop: msg_rx_[0]=%d, len=%d, check=%d", this->msg_rx_[0], (len & 0x7f), this->msg_rx_[0] + 3);
       // Sanity check
       if(this->msg_rx_[0] + 3 <= (len & 0x7f)) {
         this->interpret_msg();
+      } else {
+        ESP_LOGD(TAG, "loop: sanity check failed, discarding packet");
+        this->flush_and_rx();
       }
+    } else {
+      ESP_LOGD(TAG, "loop: no bytes in RXFIFO, len=0x%02x", len);
+      this->flush_and_rx();
     }
     if(len & 0x80) { // overflow
       ESP_LOGV(TAG, "Rx overflow, flushing FIFOs");
