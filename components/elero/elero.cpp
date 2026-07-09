@@ -18,6 +18,7 @@ void Elero::loop() {
     ESP_LOGE(TAG, "CC1101 VERSION: 0x%02x (should be 0x14)", version);
   }
   if(this->received_) {
+    ESP_LOGE(TAG, "CC1101 VERSION: 0x%02x", this->read_status(0x31));
     ESP_LOGD(TAG, "loop: received flag set");
     this->received_ = false;
     uint8_t len = this->read_status(CC1101_RXBYTES);
@@ -30,7 +31,6 @@ void Elero::loop() {
         this->read_buf(CC1101_RXFIFO, this->msg_rx_, (len & 0x7f));
       }
       ESP_LOGD(TAG, "loop: msg_rx_[0]=%d, len=%d, check=%d", this->msg_rx_[0], (len & 0x7f), this->msg_rx_[0] + 3);
-      // Sanity check
       if(this->msg_rx_[0] + 3 <= (len & 0x7f)) {
         this->interpret_msg();
       } else {
