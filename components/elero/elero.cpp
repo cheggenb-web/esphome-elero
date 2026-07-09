@@ -11,6 +11,12 @@ static const uint8_t flash_table_encode[] = {0x08, 0x02, 0x0d, 0x01, 0x0f, 0x0e,
 static const uint8_t flash_table_decode[] = {0x0a, 0x03, 0x01, 0x0c, 0x0d, 0x07, 0x0f, 0x06, 0x00, 0x08, 0x0b, 0x0e, 0x09, 0x02, 0x05, 0x04};
 
 void Elero::loop() {
+  static bool version_checked = false;
+  if(!version_checked) {
+    version_checked = true;
+    uint8_t version = this->read_status(0x31);
+    ESP_LOGE(TAG, "CC1101 VERSION: 0x%02x (should be 0x14)", version);
+  }
   if(this->received_) {
     ESP_LOGD(TAG, "loop: received flag set");
     this->received_ = false;
